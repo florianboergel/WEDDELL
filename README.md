@@ -3,7 +3,7 @@ Weddell Sea regional NEMO configuration.
 
 The following code was used in this configuration:
 
-*svn address here
+svn co http://forge.ipsl.jussieu.fr/ipsl/forge/projets/nemo/svn@10176
 
 The initial conditions and boundary data can be downloaded from JASMIN:
 
