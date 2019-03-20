@@ -3,7 +3,7 @@ Weddell Sea regional NEMO configuration.
 
 The following code was used in this configuration:
 
-svn co http://forge.ipsl.jussieu.fr/ipsl/forge/projets/nemo/svn@10176
+svn co http://forge.ipsl.jussieu.fr/nemo/svn/NEMO/trunk@10176
 
 The initial conditions and boundary data can be downloaded from JASMIN:
 
@@ -13,11 +13,15 @@ NB This recipe has be written with the ARCHER HPC INTEL environment in mind.
 
 ```
 # Change to some working directory of choice
+export WORK_DIR=path_to_working_directory
+if [ ! -d "$$WORK_DIR" ]; then
+  mkdir $WORK_DIR
+fi
 cd $WORK_DIR
 
 # Checkout the NEMO code from the SVN Paris repository 
-svn co path_to_code
-cd XXXXX
+svn co http://forge.ipsl.jussieu.fr/nemo/svn/NEMO/trunk@10176
+cd trunk
 
 # Now change to CONFIG directory
 cd cfgs
@@ -27,16 +31,19 @@ git init .
 git clone git@github.com:jdha/WEDDELL.git
 
 # Add it to the configuration list
-?????
+echo "WEDDELL OPA" >> cfgs.txt
 ```
-
-At this point you can checkout and compile XIOS or use a version you already have. If you're starting from scratch:
+At this point you can checkout and compile XIOS or use a version you already have. If you're starting from scratch or want to reproduce the original WEDDELL configuration:
 
 ```
 # Choose an appropriate directory for your XIOS installation
+export XIOS_DIR=path_to_checkout_xios
+if [ ! -d "$XIOS_DIR" ]; then
+  mkdir $XIOS_DIR
+fi
 cd $XIOS_DIR
-svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-????
-cd xios-1.0
+svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios@
+cd xios
 mv $WORK_DIR/NEMO-shelf/NEMOGCM/CONFIG/AMM7_RECICLE/arch_xios/* ./arch
 rm -rf $WORK_DIR/NEMO-shelf/NEMOGCM/CONFIG/AMM7_RECICLE/arch_xios
 ./make_xios --full --prod --arch XC30_ARCHER --netcdf_lib netcdf4_par --job 4
