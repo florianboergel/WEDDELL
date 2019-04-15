@@ -11,6 +11,8 @@ The initial conditions and boundary data can be downloaded from JASMIN:
 
 NB This recipe has be written with the ARCHER HPC INTEL environment in mind.
 
+This configuration is currently being used to test the use of hybrid z-sigma coordinates under the ice-sheets (see [under_ice.py](https://github.com/jdha/nemo_utils) for more details.
+
 ```
 # Change to some working directory of choice
 export WORK_DIR=path_to_working_directory
