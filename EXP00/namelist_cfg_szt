@@ -19,12 +19,21 @@
 !-----------------------------------------------------------------------
 &namrun        !   parameters of the run
 !-----------------------------------------------------------------------
-   cn_exp      =  "WEDDEL_TEST" !  experience name
-   nn_it000    =       1   !  first time step
+   cn_exp      =  "WEDDEL_SZT" !  experience name
+   nn_it000    =     1   !  first time step
    nn_itend    =  360   !  last  time step
    nn_leapy    =       0   !  Leap year calendar (1) or not (0)
+   ln_rstart   = .false.   !  start from rest (F) or from a restart file (T)
+      nn_euler    =    1      !  = 0 : start with forward time step if ln_rstart=T
+      nn_rstctl   =    2      !  restart control ==> activated only if ln_rstart=T
+      !                          !    = 0 nn_date0 read in namelist ; nn_it000 : read in namelist
+      !                          !    = 1 nn_date0 read in namelist ; nn_it000 : check consistancy between namelist and restart
+      !                          !    = 2 nn_date0 read in restart  ; nn_it000 : check consistancy between namelist and restart
+      cn_ocerst_in    = "WEDDEL_TEST_00000360_restart"   !  suffix of ocean restart name (input)
+      cn_ocerst_indir = "."         !  directory from which to read input ocean restarts
+      cn_ocerst_out   = "restart"   !  suffix of ocean restart name (output)
+
    ln_clobber  = .true.    !  clobber (overwrite) an existing file
-   nn_istate   =       0   !  output the initial state (1) or not (0)
    nn_stock    =  99999999 !  frequency of creation of a restart file (modulo referenced to 1)
    nn_write    =      360   !  frequency of write in the output file   (modulo referenced to nn_it000)
    nn_istate   =       0   !  output the initial state (1) or not (0)
@@ -33,13 +42,13 @@
 &namdom        !   time and space domain
 !-----------------------------------------------------------------------
    ln_linssh   = .false.   !  =T  linear free surface  ==>>  model level are fixed in time
-   rn_rdt      = 240.     !  time step for the dynamics (and tracer if nn_acc=0)
+   rn_rdt      =  120.     !  time step for the dynamics (and tracer if nn_acc=0)
 !-----------------------------------------------------------------------
 &namcfg        !   parameters of the configuration                      (default: use namusr_def in namelist_cfg)
 !-----------------------------------------------------------------------
    ln_read_cfg = .true.   !  (=T) read the domain configuration file
       !                    !  (=F) user defined configuration           (F => create/check namusr_def)
-      cn_domcfg = "domain_cfg"  ! domain configuration filename
+      cn_domcfg = "domain_cfg_szt_05m"  ! domain configuration filename
    ln_write_cfg = .false.   !  (=T) create the domain configuration file
       cn_domcfg_out = "domain_cfg" ! newly created domain configuration filename
 /
@@ -106,15 +115,15 @@
                            !  3 = rnf file for isf   4 = ISF fwf specified
                            !  option 1 and 4 need ln_isfcav = .true. (domzgr)
 ! only for nn_isf = 1 or 2
-   rn_gammat0  = 1.0e-4   ! gammat coefficient used in blk formula
-   rn_gammas0  = 1.0e-4   ! gammas coefficient used in blk formula
+   rn_gammat0  = 3.48e-2   ! gammat coefficient used in blk formula
+   rn_gammas0  = 9.80e-4   ! gammas coefficient used in blk formula
 ! only for nn_isf = 1 or 4
    rn_hisf_tbl =  0.      ! thickness of the top boundary layer    (Losh et al. 2008)
                           ! 0 => thickness of the tbl = thickness of the first wet cell
 ! only for nn_isf = 1
-   nn_isfblk   = 1        ! 1 ISOMIP  like: 2 equations formulation (Hunter et al., 2006)
+   nn_isfblk   = 2        ! 1 ISOMIP  like: 2 equations formulation (Hunter et al., 2006)
                           ! 2 ISOMIP+ like: 3 equations formulation (Asay-Davis et al., 2015)
-   nn_gammablk = 0        ! 0 = cst Gammat (= gammat/s)
+   nn_gammablk = 1        ! 0 = cst Gammat (= gammat/s)
                           ! 1 = velocity dependend Gamma (u* * gammat/s)  (Jenkins et al. 2010)
                           ! 2 = velocity and stability dependent Gamma    (Holland et al. 1999)
 /
@@ -157,11 +166,11 @@
 !-----------------------------------------------------------------------
    ln_bdy         = .false.   !  Use unstructured open boundaries
    nb_bdy         = 1         !  number of open boundary sets
-   ln_coords_file = .true.    !  =T : read bdy coordinates from file
+   ln_coords_file = .false.    !  =T : read bdy coordinates from file
       cn_coords_file = 'coordinates.bdy.nc'  !  bdy coordinates files
    ln_mask_file   = .false.   !  =T : read mask from file
       cn_mask_file = ''        !  name of mask file (if ln_mask_file=.TRUE.)
-   cn_dyn2d    = 'none'       !
+   cn_dyn2d    = 'flather'       !
    nn_dyn2d_dta   =  0        !  = 0, bdy data are equal to the initial state
       !                       !  = 1, bdy data are read in 'bdydata   .nc' files
       !                       !  = 2, use tidal harmonic forcing data from files
@@ -169,7 +178,7 @@
    cn_dyn3d      =  'none'    !
    nn_dyn3d_dta  =  0         !  = 0, bdy data are equal to the initial state
    !                          !  = 1, bdy data are read in 'bdydata   .nc' files
-   cn_tra        =  'none'    !
+   cn_tra        =  'frs'    !
    nn_tra_dta    =  0         !  = 0, bdy data are equal to the initial state
    !                          !  = 1, bdy data are read in 'bdydata   .nc' files
    cn_ice        =  'none'    !
@@ -272,7 +281,7 @@
 !-----------------------------------------------------------------------
 &nameos        !   ocean Equation Of Seawater                           (default: OFF)
 !-----------------------------------------------------------------------
-   ln_eos80    = .true.          !  = Use EOS80 equation of state
+   ln_teos10    = .true.         
 /
 !-----------------------------------------------------------------------
 &namtra_adv    !   advection scheme for tracer                          (default: NO selection)
@@ -348,8 +357,8 @@
 &namzdf        !   vertical physics                                     (default: NO selection)
 !-----------------------------------------------------------------------
    !                       ! type of vertical closure
-   ln_zdfcst   = .false.       !  constant mixing
-   ln_zdfgls   = .true.      !  Generic Length Scale closure           (T =>   fill namzdf_gls)
+   ln_zdfcst   = .true.       !  constant mixing
+   ln_zdfgls   = .false.      !  Generic Length Scale closure           (T =>   fill namzdf_gls)
    ln_zdfevd   = .false.       !  enhanced vertical diffusion
       nn_evdm     =    1         ! apply on tracer (=0) or on tracer and momentum (=1)
       rn_evd      =   0.1        ! mixing coefficient [m2/s]

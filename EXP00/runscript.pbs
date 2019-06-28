@@ -28,6 +28,7 @@ export XIOSproc=4
 #===============================================================
 echo `date` : Launch Job
 touch stdouterr
+cp namelist_cfg_zps namelist_cfg
 aprun -b -n $NEMOproc -N 24 ./nemo  >&  stdouterr_nemo : -N 2 -S 1 -n $XIOSproc ./xios_server.exe >&  stdouterr_xios
 chmod a+r *
 exit
