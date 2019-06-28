@@ -27,8 +27,12 @@ export XIOSproc=4
 # LAUNCH JOB
 #===============================================================
 echo `date` : Launch Job
-touch stdouterr
-cp namelist_cfg_zps namelist_cfg
+
+if [ "$1" == "zps" ] || [ "$1" == "szt" ]; then
+  cp namelist_cfg_$1 namelist_cfg
+else
+  exit
+fi
 aprun -b -n $NEMOproc -N 24 ./nemo  >&  stdouterr_nemo : -N 2 -S 1 -n $XIOSproc ./xios_server.exe >&  stdouterr_xios
 chmod a+r *
 exit
