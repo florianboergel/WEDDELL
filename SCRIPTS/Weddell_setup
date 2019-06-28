@@ -1,0 +1,135 @@
+#!/bin/bash
+# Lightweight script to set up the WEDDELL Config
+ 
+display_usage() { 
+   echo
+   echo "  Auto-Config: WEDDELL"
+   echo "  ********************"
+   echo
+   echo "  usage: ${0##*/} -w path_to_install_nemo -x path_to_intall_xios"
+   echo
+   echo "  flags:  -w full path to where nemo will be installed"
+   echo "          -x full path to where xios will be installed"
+   echo
+   exit 1
+	} 
+# if less than two arguments supplied, display usage 
+	if [  $# -le 3 ] 
+	then 
+		display_usage
+		exit 1
+	fi 
+# if less than two arguments supplied, display usage 
+	if [  $# -ge 5 ] 
+	then 
+		display_usage
+		exit 1
+	fi 
+# check whether user had supplied -h or --help . If yes display usage 
+	if [[ ( $# == "--help") ||  $# == "-h" ]] 
+	then 
+		display_usage
+		exit 0
+	fi 
+
+while getopts w:x: option
+  do
+  case "${option}"
+  in
+  w) export WORK_DIR=${OPTARG};;
+  x) export XIOS_DIR=${OPTARG};;
+  esac
+done
+
+if [ ${WORK_DIR:0:1} != "/" ]; then
+  echo "WORK_DIR must use full path"
+  exit 1
+fi
+
+if [ ${XIOS_DIR:0:1} != "/" ]; then
+  echo "XIOS_DIR must use full path"
+  exit 1
+fi
+
+# Change to some working directory of choice
+if [ ! -d "$WORK_DIR" ]; then
+  mkdir $WORK_DIR
+fi
+cd $WORK_DIR
+
+echo "Make sure that the correct modules are loaded"
+
+if [ -z `echo $LOADEDMODULES | grep PrgEnv-intel` ]; then
+  current_PrgEnv=`echo $LOADEDMODULES | awk 'BEGIN{FS=OFS=":"} {for (i=1;i<=NF;i++) print $i}' | grep PrgEnv`
+  module swap $current_PrgEnv PrgEnv-intel
+fi
+
+if [ -z `echo $LOADEDMODULES | grep cray-netcdf-hdf5parallel` ]; then
+  module load cray-netcdf-hdf5parallel
+fi
+
+if [ -z `echo $LOADEDMODULES | grep cray-hdf5-parallel` ]; then
+  module load cray-hdf5-parallel
+fi
+
+# Checkout the NEMO code from the SVN Paris repository 
+echo "Checking out NEMO repository"
+svn co http://forge.ipsl.jussieu.fr/nemo/svn/NEMO/trunk -r 10176 nemo
+cd nemo/NEMOGCM/CONFIG
+
+# Define the location of where the WEDDELL configuration tarballs were downloaded (keep this as the work dir for now)
+export DOWNLOAD_DIR="$WORK_DIR"
+
+# Download the source and data files
+echo "Cloning WEDDELL Config"
+git clone git@github.com:jdha/WEDDELL.git
+
+# Add it to the configuration list
+echo "WEDDELL OPA_SRC" >> cfg.txt
+
+echo $XIOS_DIR
+# Choose an appropriate directory for your XIOS installation
+if [ ! -d "$XIOS_DIR" ]; then
+  mkdir $XIOS_DIR
+fi
+cd $XIOS_DIR
+echo $PWD
+echo "Checking out xios repository"
+svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk@1242 xios
+cd xios
+cp $WORK_DIR/nemo/NEMOGCM/CONFIG/WEDDELL/ARCH/*xios* ./arch
+echo "Compiling xios"
+./make_xios --full --prod --arch XC_ARCHER_xios --netcdf_lib netcdf4_par --job 4
+
+# Let's update the path to xios
+export XIOS_DIR=$XIOS_DIR/xios
+
+cd $WORK_DIR/nemo/NEMOGCM/CONFIG/WEDDELL
+cp ARCH/*nemo* ../../ARCH
+
+echo "Compiling nemo WEDDELL Config"
+cd ../
+./makenemo -n WEDDELL -m XC_ARCHER_nemo -j 4
+
+cd WEDDELL/EXP00
+echo "Gathering forcing data"
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_zps_new.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_zps_old.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_szt_05m.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_szt_10m.nc
+
+ln -s $XIOS_DIR/bin/xios_server.exe xios_server.exe
+
+mkdir restarts
+
+echo
+echo "  Auto-Config: WEDDELL"
+echo "  **********************"
+echo
+echo "  To run the WEDDELL Configuration:"
+echo
+echo "  - update the runscript.pbs accordingly "
+echo "      (project code, nodes, modules, etc)"
+echo
+echo "  - submit via the qsub command"
+echo    
