@@ -61,8 +61,8 @@ CONTAINS
       pv  (:,:,:) = 0._wp
       pssh(:,:)   = 0._wp
       !
-      T0 = -1.9_wp
-      Tb = -1.0_wp ! -1.9 (COLD), 1.0 (WARM)
+      T0 = -0.5_wp
+      Tb = -0.5_wp ! -1.9 (COLD), 1.0 (WARM)
       S0 = 33.8_wp
       Sb = 34.70_wp ! 34.55 (COLD), 34.7 (WARM)
       

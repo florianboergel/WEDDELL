@@ -679,7 +679,10 @@ CONTAINS
                   !! compute Rc number (as done in zdfric.F90)
 !!gm better to do it like in the new zdfric.F90   i.e. avm weighted Ri computation
 !!gm moreover, use Max(rn2,0) to take care of static instabilities....
-                  zcoef = 0.5_wp / e3w_n(ji,jj,ikt+1)
+                 !zcoef = 0.5_wp / e3w_n(ji,jj,ikt+1)
+                 !zcoef = 0.5_wp / e3w_n(ji,jj,ikt)
+                  zcoef = 1.0_wp / ( gdept_n(ji,jj,ikt) - gdepw_n(ji,jj,ikt) )
+
                   !                                            ! shear of horizontal velocity
                   zdku = zcoef * (  un(ji-1,jj  ,ikt  ) + un(ji,jj,ikt  )  &
                      &             -un(ji-1,jj  ,ikt+1) - un(ji,jj,ikt+1)  )
