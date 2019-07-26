@@ -5,13 +5,9 @@ The following code was used in this configuration:
 
 svn co http://forge.ipsl.jussieu.fr/nemo/svn/NEMO/trunk@10176
 
-The initial conditions and boundary data can be downloaded from JASMIN:
-
-*thredds server here
-
 NB This recipe has be written with the ARCHER HPC INTEL environment in mind.
 
-This configuration is currently being used to test the use of hybrid z-sigma coordinates under the ice-sheets (see [under_ice.py](https://github.com/jdha/nemo_utils) for more details.
+This configuration is currently being used to test the use of hybrid z-sigma coordinates under the ice-sheets more details to follow.
 
 ```
 # Change to some working directory of choice
@@ -77,8 +73,11 @@ cd ../
 That should be enough to produce a valid executable. Now to copy the forcing data from JASMIN. 
 
 ```
-cd AMM7_RECICLE/ENSEMBLE_INPUTS
-wget -r -np -nH --cut-dirs=3 -erobots=off --reject="index.html*" http://gws-access.ceda.ac.uk/public/recicle/config/
+cd WEDDELL/EXP00
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_zps_new.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_zps_old.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_szt_05m.nc
+wget http://opendap4gws.jasmin.ac.uk/thredds/noc_msm/fileServer/weddell/domain_cfg_szt_10m.nc
 ```
 
 And finally link the XIOS binary to the configuration directory.
